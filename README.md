@@ -12,7 +12,7 @@
 - 🧪 **테스트 케이스 명세** : [docs/test-cases.md](docs/test-cases.md) · [Excel](docs/test-cases.xlsx)
 - 🔗 **요구사항 추적 매트릭스(RTM)** : [docs/traceability-matrix.md](docs/traceability-matrix.md)
 
-> ⚠️ 본 레포는 공개 샌드박스(`saucedemo.com`, `reqres.in`) 및 목킹 환경을 대상으로 작성한 **역량 시연용 데모**입니다. 회사 서비스/데이터는 포함하지 않으며, 경로검색·즐겨찾기·장소추천 등 티맵 성격 시나리오는 `page.route` 목킹(가상 응답) 기반입니다.
+> ⚠️ 본 레포는 **역량 시연용 데모**입니다. 회사 서비스/데이터는 포함하지 않습니다. UI는 티맵풍 데모 앱(로그인 → 경로검색)을, API는 공개 REST API(`reqres.in`)를 대상으로 하며, 로그인·경로검색·즐겨찾기·장소추천은 `page.route` 목킹(가상 응답) 기반입니다.
 
 ---
 
@@ -20,8 +20,8 @@
 
 | 항목 | 값 |
 | --- | --- |
-| 요구사항 | 16건 (기능 13 · 비기능 3) |
-| 테스트 케이스 | 14건 (UI 4 · API 4 · Mocking 6) |
+| 요구사항 | 18건 (기능 15 · 비기능 3) |
+| 테스트 케이스 | 16건 (UI 6 · API 4 · Mocking 6) |
 | 자동화 도구 | Playwright · Postman/Newman |
 | 요구사항 커버리지 | 100% |
 | 최종 판정 | Pass 100% |
@@ -33,13 +33,13 @@
 
 ```
 qa-automation-demo/
+├─ app/
+│  └─ index.html                    # 티맵풍 데모 앱(로그인 → 경로검색, UI 테스트 대상)
 ├─ tests/
 │  ├─ pages/                        # Page Object Model
-│  │  ├─ LoginPage.ts
-│  │  └─ InventoryPage.ts
-│  ├─ ui/                           # UI 자동화 (saucedemo.com)
-│  │  ├─ login.spec.ts
-│  │  └─ inventory.spec.ts
+│  │  └─ TmapAppPage.ts             #  로그인·경로검색 POM
+│  ├─ ui/                           # UI 자동화 (티맵 데모 앱)
+│  │  └─ tmap-app.ui.spec.ts        #  로그인 3 + 경로검색 화면 3 (목킹)
 │  ├─ api/                          # API 자동화 (reqres.in)
 │  │  └─ users-api.spec.ts
 │  └─ mocking/                      # API Mocking (page.route)

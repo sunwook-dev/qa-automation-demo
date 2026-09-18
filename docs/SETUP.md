@@ -49,6 +49,17 @@ newman run postman/qa-api.postman_collection.json -e postman/reqres.postman_envi
 
 Postman 앱에서 열어보려면 두 json 파일을 각각 **Import** 하면 됩니다.
 
+## 4-2. QA 문서 (요구사항 → 테스트 → 추적성)
+
+`docs/` 폴더에 QA 프로세스 문서가 있습니다.
+
+- `requirements.md` — 요구사항 정의서 (REQ-ID, 인수기준, 우선순위, 품질특성)
+- `test-cases.md` — 테스트 케이스 명세 (ID/분류/Step/기대결과/판정/우선순위/구분/품질특성/요구사항ID)
+- `traceability-matrix.md` — 요구사항 추적 매트릭스 (커버리지 100%)
+- `test-cases.xlsx` — 위 3종을 시트로 담은 Excel (필터·드롭다운·커버리지 자동집계). 실제 TC 관리 형태
+
+노션에는 `.md`는 붙여넣으면 표로 변환되고, `.xlsx`는 GitHub 링크를 **북마크**로 걸거나 파일을 업로드하면 됩니다.
+
 ## 5. 노션 이력서에 링크 연결하기
 
 노션 이력서의 **Work Experience(스타일셀러) 아래** 또는 **Introduce 아래**에 콜아웃 블록을 하나 만들고 아래처럼 넣으면 됩니다.

@@ -19,7 +19,8 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: 'https://www.saucedemo.com',
+    // UI 테스트는 목킹된 데모 앱 오리진을 사용합니다(page.route로 화면·API 제공).
+    baseURL: 'https://tmap.demo',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
