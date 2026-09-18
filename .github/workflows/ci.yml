@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   test:
-    name: Run Playwright tests
+    name: Run tests & build report
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,27 +32,66 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run tests
+      # 1) Playwright: UI / API / Mocking 자동화
+      - name: Run Playwright tests
         run: npx playwright test
 
-      # 테스트 성공/실패와 무관하게 HTML 리포트를 아티팩트로 업로드
-      - name: Upload HTML report artifact
+      # 2) Postman/Newman: API 자동화
+      - name: Install Newman
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
+        run: npm install -g newman newman-reporter-htmlextra
 
-      # Pages 배포용 아티팩트(리포트 폴더)
+      - name: Run Postman (Newman) tests
+        if: ${{ !cancelled() }}
+        run: >
+          newman run postman/qa-api.postman_collection.json
+          -e postman/reqres.postman_environment.json
+          -r cli,htmlextra
+          --reporter-htmlextra-export newman-report/index.html
+
+      # 3) 두 리포트를 하나의 사이트로 합치기
+      - name: Assemble report site
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p public/playwright public/newman
+          cp -r playwright-report/* public/playwright/ 2>/dev/null || true
+          cp -r newman-report/*     public/newman/     2>/dev/null || true
+          cat > public/index.html <<'HTML'
+          <!doctype html><html lang="ko"><head><meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>QA Automation Reports</title>
+          <style>
+            body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;
+              background:#f7f6f3;color:#37352f;margin:0;padding:48px 20px;line-height:1.6}
+            .wrap{max-width:640px;margin:0 auto}
+            h1{font-size:26px;margin:0 0 6px}
+            p.sub{color:#787066;margin:0 0 28px;font-size:15px}
+            a.card{display:block;text-decoration:none;color:inherit;background:#fff;
+              border:1px solid #e6e5e2;border-radius:12px;padding:20px 22px;margin:14px 0;
+              transition:box-shadow .15s}
+            a.card:hover{box-shadow:0 4px 16px rgba(0,0,0,.07)}
+            .card b{font-size:17px}
+            .card span{display:block;color:#787066;font-size:13.5px;margin-top:4px}
+            .tag{display:inline-block;background:#eaf3fb;color:#337ea9;font-size:12px;
+              font-weight:700;padding:2px 8px;border-radius:5px;margin-left:6px}
+          </style></head><body><div class="wrap">
+          <h1>QA Automation Reports</h1>
+          <p class="sub">공개 샌드박스 대상 자동화 테스트 결과 (Playwright + Postman/Newman)</p>
+          <a class="card" href="./playwright/"><b>Playwright Report<span class="tag">UI · API · Mocking</span></b>
+          <span>POM 기반 UI 자동화, API 검증, API Mocking 테스트 결과</span></a>
+          <a class="card" href="./newman/"><b>Postman / Newman Report<span class="tag">API</span></b>
+          <span>Postman 컬렉션 기반 REST API 자동화 테스트 결과</span></a>
+          </div></body></html>
+          HTML
+
       - name: Upload Pages artifact
         if: ${{ !cancelled() }}
         uses: actions/upload-pages-artifact@v3
         with:
-          path: playwright-report/
+          path: public/
 
   deploy:
-    name: Deploy report to GitHub Pages
+    name: Deploy reports to GitHub Pages
     needs: test
     if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest

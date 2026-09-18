@@ -1,0 +1,124 @@
+{
+  "info": {
+    "name": "QA API Automation (reqres)",
+    "description": "공개 REST API(reqres.in) 대상 API 자동화 테스트 컬렉션. Newman으로 CI 실행 가능. TC-API-001~004.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "TC-API-001 | GET 단일 사용자 조회 (200 + 스키마)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "x-api-key", "value": "{{apiKey}}" }],
+        "url": { "raw": "{{baseUrl}}/users/2", "host": ["{{baseUrl}}"], "path": ["users", "2"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('상태코드 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('data 객체 존재', () => pm.expect(body).to.have.property('data'));",
+              "pm.test('id/email/이름 필드 정합', () => {",
+              "  pm.expect(body.data).to.have.property('id', 2);",
+              "  pm.expect(body.data.email).to.include('@');",
+              "  pm.expect(body.data).to.have.property('first_name');",
+              "  pm.expect(body.data).to.have.property('last_name');",
+              "});",
+              "pm.test('응답시간 2초 이내', () => pm.expect(pm.response.responseTime).to.be.below(2000));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC-API-002 | 미존재 사용자 조회 (404)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "x-api-key", "value": "{{apiKey}}" }],
+        "url": { "raw": "{{baseUrl}}/users/23", "host": ["{{baseUrl}}"], "path": ["users", "23"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('상태코드 404 (미존재 리소스 처리)', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC-API-003 | POST 사용자 생성 (201 + 데이터 정합)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "x-api-key", "value": "{{apiKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"sunwook\",\n  \"job\": \"QA Automation Engineer\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('상태코드 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('요청 데이터가 응답에 반영', () => {",
+              "  pm.expect(body.name).to.eql('sunwook');",
+              "  pm.expect(body.job).to.eql('QA Automation Engineer');",
+              "});",
+              "pm.test('id / createdAt 생성 확인', () => {",
+              "  pm.expect(body).to.have.property('id');",
+              "  pm.expect(body).to.have.property('createdAt');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "TC-API-004 | GET 사용자 목록 (200 + 페이징)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "x-api-key", "value": "{{apiKey}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/users?page=1",
+          "host": ["{{baseUrl}}"],
+          "path": ["users"],
+          "query": [{ "key": "page", "value": "1" }]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('상태코드 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('data 배열이 비어있지 않음', () => {",
+              "  pm.expect(body.data).to.be.an('array').that.is.not.empty;",
+              "});",
+              "pm.test('페이지 메타 정보 정합', () => {",
+              "  pm.expect(body).to.have.property('page', 1);",
+              "  pm.expect(body).to.have.property('per_page');",
+              "  pm.expect(body).to.have.property('total');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

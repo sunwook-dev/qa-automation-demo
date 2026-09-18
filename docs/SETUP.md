@@ -31,6 +31,24 @@ git push -u origin main
 
 ---
 
+## 4-1. 리포트 구성 (Playwright + Postman/Newman)
+
+CI가 완료되면 Pages 루트에 **두 리포트를 잇는 랜딩 페이지**가 배포됩니다.
+
+- 랜딩(메인 링크): `https://<username>.github.io/<repo>/`
+- Playwright 리포트: `https://<username>.github.io/<repo>/playwright/`
+- Postman/Newman 리포트: `https://<username>.github.io/<repo>/newman/`
+
+Postman 컬렉션은 `postman/qa-api.postman_collection.json`, 환경은 `postman/reqres.postman_environment.json` 입니다.
+로컬에서 직접 돌려보려면:
+
+```bash
+npm install -g newman newman-reporter-htmlextra
+newman run postman/qa-api.postman_collection.json -e postman/reqres.postman_environment.json -r cli,htmlextra --reporter-htmlextra-export newman-report/index.html
+```
+
+Postman 앱에서 열어보려면 두 json 파일을 각각 **Import** 하면 됩니다.
+
 ## 5. 노션 이력서에 링크 연결하기
 
 노션 이력서의 **Work Experience(스타일셀러) 아래** 또는 **Introduce 아래**에 콜아웃 블록을 하나 만들고 아래처럼 넣으면 됩니다.
