@@ -1,0 +1,29 @@
+{
+  "name": "tmap-qa-automation-demo",
+  "version": "1.0.0",
+  "description": "QA Automation 데모 - Playwright 기반 UI/API/Mocking 자동화 테스트 (공개 샌드박스 대상)",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test tests/ui",
+    "test:api": "playwright test tests/api",
+    "test:mock": "playwright test tests/mocking",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "qa",
+    "playwright",
+    "automation",
+    "api-testing",
+    "api-mocking",
+    "ci-cd"
+  ],
+  "author": "Kim Sunwook",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^22.7.0",
+    "typescript": "^5.6.0"
+  }
+}
