@@ -27,17 +27,6 @@
 | 최종 판정 | Pass 100% |
 | 커버 품질특성 | 기능적합성·성능효율성·호환성·신뢰성·보안·사용성 |
 
-## 채용공고 요건 매핑
-
-| 티맵모빌리티 채용 요건 | 본 데모에서의 증빙 |
-| --- | --- |
-| 자동화 테스트 플랫폼 구축·운영·개선 | Playwright + Postman/Newman + GitHub Actions CI + Pages 리포트 배포 파이프라인 |
-| UI/API 자동화 TC 작성 (python/java/**js**) | `tests/ui`(POM UI), `tests/api`(REST API), `postman/`(컬렉션) — TypeScript/JS |
-| 개발·자동화 도구 (github, CI/CD, **postman** 등) | GitHub Actions CI/CD, Playwright, Postman/Newman |
-| 비기능 영역 / 예외 상황 테스트 | 오류 응답(503)·빈 결과 목킹, 응답시간 검증, 멀티 뷰포트(호환성), 실패 시 trace 수집 |
-| **API Mocking** 관련 테스트 개발·활용 | `tests/mocking` — `page.route`로 경로검색·즐겨찾기·장소추천 API 목킹 |
-| 생성형 AI 활용 자동화 *(우대)* | (별도) AI Agent 기반 TC 자동 생성 경험 — 이력서 참조 |
-
 ---
 
 ## 프로젝트 구조
