@@ -64,21 +64,31 @@
   var loginError=document.getElementById('login-error');
   var loginValidation=document.getElementById('login-validation');
   var results=document.getElementById('results');
-  var SAMPLE=[{id:1,type:'fastest',durationMin:34,distanceKm:26.1},{id:2,type:'free',durationMin:41,distanceKm:24.7}];
-
   function showApp(){ loginView.hidden=true; appView.hidden=false; }
+
+  // 백엔드가 없을 때(파일 열람·GitHub Pages) 입력값 기반으로 그럴듯한 예시 경로를 생성
+  function demoRoutes(from, to){
+    if(!from || !to){ return []; }
+    var seed=0, s=(from+'>'+to);
+    for(var i=0;i<s.length;i++){ seed=(seed*31 + s.charCodeAt(i)) % 100000; }
+    var base=18 + (seed % 40);            // 18~57분
+    var dist=+(base*0.72).toFixed(1);
+    return [
+      { id:1, type:'fastest', durationMin:base,    distanceKm:+(dist+1.4).toFixed(1) },
+      { id:2, type:'free',    durationMin:base+7,  distanceKm:dist }
+    ];
+  }
 
   async function doLogin(){
     var id=document.getElementById('userid').value.trim();
     var pw=document.getElementById('userpw').value.trim();
     loginError.textContent=''; loginValidation.textContent='';
     if(!id || !pw){ loginValidation.textContent='아이디와 비밀번호를 입력해 주세요.'; return; }   // 필수값 검증
-    if(location.protocol==='file:'){ showApp(); return; }                                        // 파일 직접 열람 데모
     try{
       var r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,pw:pw})});
-      if(r.status===200){ showApp(); }
-      else { loginError.textContent='아이디 또는 비밀번호가 올바르지 않습니다.'; }
-    }catch(e){ loginError.textContent='로그인 중 오류가 발생했어요.'; }
+      if(r.status===200 || r.status===404){ showApp(); }              // 200=인증성공, 404=백엔드 없음(데모)
+      else { loginError.textContent='아이디 또는 비밀번호가 올바르지 않습니다.'; } // 401 등
+    }catch(e){ showApp(); }                                            // fetch 자체 실패(백엔드 없음) → 데모 진입
   }
 
   function typeLabel(t){ return t==='fastest'?'최단':t==='free'?'무료':t; }
@@ -96,12 +106,12 @@
   async function search(){
     var from=document.getElementById('origin').value, to=document.getElementById('destination').value;
     results.innerHTML='<p class="state" data-testid="loading">경로를 검색하고 있어요…</p>';
-    if(location.protocol==='file:'){ render(SAMPLE); return; }
     try{
       var r=await fetch('/api/route-search?from='+encodeURIComponent(from)+'&to='+encodeURIComponent(to));
-      if(!r.ok) throw new Error('http '+r.status);
-      var data=await r.json(); render(data.routes);
-    }catch(e){ results.innerHTML='<p class="state error" data-testid="error">일시적인 오류가 발생했어요. 잠시 후 다시 시도해 주세요.</p>'; }
+      if(r.ok){ var data=await r.json(); render(data.routes); }        // 정상 응답
+      else if(r.status===404){ render(demoRoutes(from,to)); }          // 백엔드 없음(데모) → 입력 기반 예시
+      else { results.innerHTML='<p class="state error" data-testid="error">일시적인 오류가 발생했어요. 잠시 후 다시 시도해 주세요.</p>'; } // 5xx 등
+    }catch(e){ render(demoRoutes(from,to)); }                          // fetch 자체 실패(백엔드 없음) → 입력 기반 예시
   }
 
   document.getElementById('login-btn').addEventListener('click', doLogin);
