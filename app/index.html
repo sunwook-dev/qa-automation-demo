@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>경로검색 데모 앱 (로그인 → 경로검색)</title>
+<style>
+  :root{ --brand:#0064ff; --line:#e6e8eb; --muted:#8b95a1; --bg:#f2f4f6; --err:#e5484d; }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;margin:0;background:var(--bg);color:#191f28}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;background:#fff}
+  header{background:var(--brand);color:#fff;padding:18px 20px;font-size:18px;font-weight:700}
+  .pane{padding:16px 20px}
+  .field{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:10px}
+  .field .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .dot.from{background:#00c2b3}.dot.to{background:var(--brand)}
+  .field input{border:0;outline:0;font-size:15px;width:100%;background:transparent}
+  button{width:100%;background:var(--brand);color:#fff;border:0;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer}
+  .msg{min-height:18px;font-size:13px;margin:6px 2px 0}
+  .msg.error{color:var(--err)}
+  .results{padding:14px 20px 40px}
+  .state{color:var(--muted);text-align:center;padding:36px 0;font-size:14px}
+  .state.error{color:var(--err)}
+  .route-card{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+  .badge{background:#e8f0ff;color:var(--brand);font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;flex:0 0 auto}
+  .badge.free{background:#e7f8f0;color:#12b886}
+  .dur{font-size:17px;font-weight:700}
+  .dist{color:var(--muted);font-size:13px;margin-left:auto}
+  .demo-note{font-size:11px;color:var(--muted);text-align:center;padding:8px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>🧭 경로검색 데모 <span style="font-weight:400;opacity:.8;font-size:13px">로그인 → 경로검색</span></header>
+
+  <!-- 로그인 화면 -->
+  <section class="pane" id="login-view" data-testid="login-view">
+    <div class="field"><input id="userid" placeholder="아이디"></div>
+    <div class="field"><input id="userpw" type="password" placeholder="비밀번호"></div>
+    <button id="login-btn">로그인</button>
+    <p class="msg" data-testid="login-validation" id="login-validation"></p>
+    <p class="msg error" data-testid="login-error" id="login-error"></p>
+  </section>
+
+  <!-- 경로검색 화면 (로그인 후) -->
+  <section id="app-view" data-testid="app-view" hidden>
+    <div class="pane" style="border-bottom:8px solid var(--bg)">
+      <div class="field"><span class="dot from"></span><input id="origin" placeholder="출발지" value="서울역"></div>
+      <div class="field"><span class="dot to"></span><input id="destination" placeholder="도착지" value="판교역"></div>
+      <button id="search-btn">경로 검색</button>
+    </div>
+    <div class="results" id="results" data-testid="results">
+      <p class="state">출발지와 도착지를 입력하고 검색하세요.</p>
+    </div>
+  </section>
+
+  <p class="demo-note">※ 데모 앱입니다. 실제 서비스가 아니며, 로그인·경로 데이터는 예시(목킹)입니다.</p>
+</div>
+
+<script>
+  var loginView=document.getElementById('login-view');
+  var appView=document.getElementById('app-view');
+  var loginError=document.getElementById('login-error');
+  var loginValidation=document.getElementById('login-validation');
+  var results=document.getElementById('results');
+  function showApp(){ loginView.hidden=true; appView.hidden=false; }
+
+  // 백엔드가 없을 때(파일 열람·GitHub Pages) 입력값 기반으로 그럴듯한 예시 경로를 생성
+  function demoRoutes(from, to){
+    if(!from || !to){ return []; }
+    var seed=0, s=(from+'>'+to);
+    for(var i=0;i<s.length;i++){ seed=(seed*31 + s.charCodeAt(i)) % 100000; }
+    var base=18 + (seed % 40);            // 18~57분
+    var dist=+(base*0.72).toFixed(1);
+    return [
+      { id:1, type:'fastest', durationMin:base,    distanceKm:+(dist+1.4).toFixed(1) },
+      { id:2, type:'free',    durationMin:base+7,  distanceKm:dist }
+    ];
+  }
+
+  async function doLogin(){
+    var id=document.getElementById('userid').value.trim();
+    var pw=document.getElementById('userpw').value.trim();
+    loginError.textContent=''; loginValidation.textContent='';
+    if(!id || !pw){ loginValidation.textContent='아이디와 비밀번호를 입력해 주세요.'; return; }   // 필수값 검증
+    try{
+      var r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,pw:pw})});
+      if(r.status===200 || r.status===404){ showApp(); }              // 200=인증성공, 404=백엔드 없음(데모)
+      else { loginError.textContent='아이디 또는 비밀번호가 올바르지 않습니다.'; } // 401 등
+    }catch(e){ showApp(); }                                            // fetch 자체 실패(백엔드 없음) → 데모 진입
+  }
+
+  function typeLabel(t){ return t==='fastest'?'최단':t==='free'?'무료':t; }
+  function render(routes){
+    if(!routes || routes.length===0){
+      results.innerHTML='<p class="state" data-testid="empty">추천 경로가 없습니다. 출발지·도착지를 확인해 주세요.</p>'; return;
+    }
+    results.innerHTML=routes.map(function(rt){
+      return '<div class="route-card" data-testid="route-card">'+
+             '<span class="badge '+(rt.type==='free'?'free':'')+'">'+typeLabel(rt.type)+'</span>'+
+             '<span class="dur">'+rt.durationMin+'분</span>'+
+             '<span class="dist">'+rt.distanceKm+'km</span></div>';
+    }).join('');
+  }
+  async function search(){
+    var from=document.getElementById('origin').value, to=document.getElementById('destination').value;
+    results.innerHTML='<p class="state" data-testid="loading">경로를 검색하고 있어요…</p>';
+    try{
+      var r=await fetch('/api/route-search?from='+encodeURIComponent(from)+'&to='+encodeURIComponent(to));
+      if(r.ok){ var data=await r.json(); render(data.routes); }        // 정상 응답
+      else if(r.status===404){ render(demoRoutes(from,to)); }          // 백엔드 없음(데모) → 입력 기반 예시
+      else { results.innerHTML='<p class="state error" data-testid="error">일시적인 오류가 발생했어요. 잠시 후 다시 시도해 주세요.</p>'; } // 5xx 등
+    }catch(e){ render(demoRoutes(from,to)); }                          // fetch 자체 실패(백엔드 없음) → 입력 기반 예시
+  }
+
+  document.getElementById('login-btn').addEventListener('click', doLogin);
+  document.getElementById('search-btn').addEventListener('click', search);
+</script>
+</body>
+</html>
